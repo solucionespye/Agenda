@@ -7,7 +7,7 @@
 :root{--papel:#fcfcf8;--tinta:#1d2433;--linea:#cfe0ef;--margen:#d9534f;--n1:#e9eef5;--n2:#ffe9a8;--n3:#ffb3ad;--b1:#8aa0b8;--b2:#d9a400;--b3:#c62828}
 *{box-sizing:border-box}
 body{margin:0;background:#e6e9ee;color:var(--tinta);font:18px/1.5 "Atkinson Hyperlegible",system-ui,sans-serif}
-.hoja{max-width:760px;margin:0 auto;min-height:100vh;background:var(--papel);padding:16px 16px 110px 44px;position:relative;
+.hoja{max-width:760px;margin:0 auto;min-height:100vh;background:var(--papel);padding:16px 16px 60px 44px;position:relative;
 background-image:repeating-linear-gradient(transparent 0 33px,var(--linea) 33px 34px)}
 .hoja:before{content:"";position:absolute;left:30px;top:0;bottom:0;width:2px;background:var(--margen);opacity:.6}
 h1{font-size:1.1rem;margin:0}h2{margin:.2em 0;font-size:1.5rem;text-transform:capitalize}
@@ -27,7 +27,6 @@ textarea{width:100%;min-height:90px}input[type=search],input[type=text],input[ty
 .dc.sel{background:var(--tinta);color:#fff}.dc.hoy{border-width:3px}
 .dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;min-height:9px}.dots i{width:9px;height:9px;border-radius:50%;border:1px solid #fff}
 .pt{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:4px;vertical-align:middle}
-#rapido{position:fixed;left:0;right:0;bottom:0;display:flex;gap:8px;justify-content:center;align-items:center;padding:8px 12px calc(8px + env(safe-area-inset-bottom));background:#fcfcf8;border-top:2px solid var(--tinta);z-index:5}#bRap{flex:1;max-width:420px;min-height:52px;background:var(--b3);border-color:var(--b3);color:#fff}#bRap.on{background:#7f1d1d}
 .mant{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}.etq{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:8px}.etq b{overflow-wrap:anywhere}.etq input[type=color]{width:46px;height:42px}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #2563eb;outline-offset:2px}
 </style></head><body><div class="hoja">
@@ -85,7 +84,6 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <div class="caja"><p>Escribe a tu bot de Telegram y pega aquí tu número de chat. Las alarmas llegarán a ese chat.</p>
   <div class="fila"><input type="text" id="chat" placeholder="Número de chat de Telegram"><button class="p" id="bChat">Guardar</button></div></div>
  </section>
-<div id="rapido"><select id="rapAl" aria-label="Aviso"><option value="">Sin aviso</option><option value="30">En 30 min</option><option value="60">En 1 hora</option><option value="120">En 2 horas</option><option value="m">Mañana 9:00</option></select><button id="bRap" class="mant">🔔 Mantén pulsado: recordatorio</button></div>
 </main>
 
 <script>
@@ -245,29 +243,6 @@ $("bGuardar").onclick=guardar;$("bCancel").onclick=()=>{limpiar();dia()};$("bBus
 const g=$("bGrabar");g.addEventListener("pointerdown",iniciarGrab);g.addEventListener("pointerup",pararGrab);g.addEventListener("pointercancel",pararGrab);g.addEventListener("contextmenu",e=>e.preventDefault());
 $("bNueva").onclick=async()=>{const n=$("nueva").value.trim();if(!n)return;const {error}=await db.from("etiquetas").insert({user_id:user.id,nombre:n,color:$("nuevaCol").value});if(error)return msg(error.message);$("nueva").value="";await cargarTags()};
 $("bChat").onclick=async()=>{const {error}=await db.from("perfiles").upsert({id:user.id,telegram_chat_id:$("chat").value.trim()});msg(error?error.message:"Guardado")};
-let drap=null,rapando=false,rapTxt="";const TXT_RAP="🔔 Mantén pulsado: recordatorio";
-function iniciarRap(e){
- e.preventDefault();const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!SR)return msg("Este navegador no dicta. Usa Chrome o Safari.");if(drap||rapando)return;rapando=true;rapTxt="";
- try{e.target.setPointerCapture(e.pointerId)}catch{}
- const r=new SR();r.lang="es-ES";r.continuous=true;r.interimResults=false;drap=r;
- r.onresult=x=>{for(let i=x.resultIndex;i<x.results.length;i++)if(x.results[i].isFinal)rapTxt+=(rapTxt?" ":"")+x.results[i][0].transcript.trim()};
- r.onerror=x=>{if(x.error!=="no-speech"&&x.error!=="aborted")msg("No se pudo dictar: "+x.error)};
- r.onend=()=>{drap=null;rapando=false;$("bRap").classList.remove("on");$("bRap").textContent=TXT_RAP;guardarRap()};
- $("bRap").classList.add("on");$("bRap").textContent="🔴 Escuchando… suelta para guardar";
- try{r.start()}catch{}
-}
-function pararRap(){rapando=false;if(drap)try{drap.stop()}catch{}}
-async function guardarRap(){
- if(!rapTxt)return msg("No te he oído. Mantén pulsado mientras hablas.");
- const q=$("rapAl").value;let al=null;
- if(q==="m"){al=new Date();al.setDate(al.getDate()+1);al.setHours(9,0,0,0)}else if(q)al=new Date(Date.now()+ +q*60000);
- const f=ymd(new Date()),etiqueta=tags.find(t=>t.nombre==="Recordatorio")?"Recordatorio":(tags[0]?tags[0].nombre:null);
- const {error}=await db.from("notas").insert({user_id:user.id,fecha:f,texto:rapTxt,nivel:2,etiqueta,alarma_en:al?al.toISOString():null,avisada:false});
- if(error)return msg(error.message);
- msg("Recordatorio guardado: "+rapTxt,true);if(fecha===f)dia();else calendario();
-}
-const rb=$("bRap");rb.addEventListener("pointerdown",iniciarRap);rb.addEventListener("pointerup",pararRap);rb.addEventListener("pointercancel",pararRap);rb.addEventListener("contextmenu",e=>e.preventDefault());
 const dd=$("bDictar");dd.addEventListener("pointerdown",iniciarDic);dd.addEventListener("pointerup",pararDic);dd.addEventListener("pointercancel",pararDic);dd.addEventListener("contextmenu",e=>e.preventDefault());
 $("rep").onchange=modoRep;
 iniciar(false);
