@@ -84,6 +84,7 @@ const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"
 
 async function entrar(nuevo){
  const c={email:$("em").value.trim(),password:$("pw").value};
+ if(!c.email||!c.password)return msg("Rellena los campos correo y contraseña.");
  const {error}=nuevo?await db.auth.signUp(c):await db.auth.signInWithPassword(c);
  if(error)return msg(error.message);
  if(nuevo)msg("Cuenta creada. Si te piden confirmar el correo, hazlo y entra.");
