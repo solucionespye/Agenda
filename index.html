@@ -137,7 +137,8 @@ async function calendario(){
 const alTxt=n=>n.dias_antes?new Date(n.alarma_hasta).toLocaleTimeString("es-ES",{timeStyle:"short"})+", cada día desde "+n.dias_antes+" días antes":new Date(n.alarma_en).toLocaleString("es-ES",{dateStyle:"short",timeStyle:"short"})+(n.repetir?" ("+n.repetir+")":"");
 function tarjeta(n){
  const lv=["","Apunte","Recordatorio","Importante"][n.nivel];
- return `<div class="nota n${n.nivel}"><div><div class="meta">${n.fecha}${n.hora?" · "+n.hora.slice(0,5):""} · <i class="pt" style="background:${colorDe(n.etiqueta)}"></i>${esc(n.etiqueta)}${n.alarma_en?" · ⏰ "+alTxt(n):""}</div>
+ const c=colorDe(n.etiqueta);
+ return `<div class="nota" style="border-color:${c};background:color-mix(in srgb,${c} 22%,#fff)"><div><div class="meta">${n.fecha}${n.hora?" · "+n.hora.slice(0,5):""} · <i class="pt" style="background:${colorDe(n.etiqueta)}"></i>${esc(n.etiqueta)}${n.alarma_en?" · ⏰ "+alTxt(n):""}</div>
  <div>${esc(n.texto).replace(/\n/g,"<br>")}</div>${n.audio_path?`<audio controls data-p="${n.audio_path}"></audio>`:""}</div>
  <div class="acc"><button data-edita="${n.id}" aria-label="Editar">✏️</button><button data-borra="${n.id}" data-a="${n.audio_path||""}" aria-label="Borrar">🗑</button></div></div>`;
 }
