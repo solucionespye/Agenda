@@ -1,0 +1,174 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Agenda Mama</title>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{--papel:#fcfcf8;--tinta:#1d2433;--linea:#cfe0ef;--margen:#d9534f;--n1:#e9eef5;--n2:#ffe9a8;--n3:#ffb3ad;--b1:#8aa0b8;--b2:#d9a400;--b3:#c62828}
+*{box-sizing:border-box}
+body{margin:0;background:#e6e9ee;color:var(--tinta);font:18px/1.5 "Atkinson Hyperlegible",system-ui,sans-serif}
+.hoja{max-width:760px;margin:0 auto;min-height:100vh;background:var(--papel);padding:16px 16px 60px 44px;position:relative;
+background-image:repeating-linear-gradient(transparent 0 33px,var(--linea) 33px 34px)}
+.hoja:before{content:"";position:absolute;left:30px;top:0;bottom:0;width:2px;background:var(--margen);opacity:.6}
+h1{font-size:1.1rem;margin:0}h2{margin:.2em 0;font-size:1.5rem;text-transform:capitalize}
+nav,.fila{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+button,select,input,textarea{font:inherit;color:inherit;border:2px solid var(--tinta);border-radius:8px;padding:8px 12px;background:#fff}
+button{cursor:pointer;font-weight:700}button.p{background:var(--tinta);color:#fff}
+button.on{background:var(--tinta);color:#fff}
+textarea{width:100%;min-height:90px}input[type=search],input[type=text],input[type=email],input[type=password]{flex:1;min-width:140px}
+.nota{border-left:10px solid;border-radius:8px;padding:8px 12px;margin:10px 0;display:flex;gap:10px;justify-content:space-between}
+.n1{background:var(--n1);border-color:var(--b1)}.n2{background:var(--n2);border-color:var(--b2)}.n3{background:var(--n3);border-color:var(--b3)}
+.meta{font-size:.85rem;opacity:.8}.nota audio{width:100%;margin-top:6px}
+.caja{background:#fff;border:2px solid var(--tinta);border-radius:10px;padding:12px;margin:12px 0}
+.oculto{display:none}#msg{font-weight:700;color:var(--b3)}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #2563eb;outline-offset:2px}
+</style></head><body><div class="hoja">
+<!-- ===== CONFIGURACIÓN: pega aquí tus datos de Supabase ===== -->
+<h1>Agenda Mama</h1><div id="msg" role="status"></div>
+
+<section id="login" class="caja">
+ <h2>Entrar</h2>
+ <div class="fila"><input type="email" id="em" placeholder="Correo"><input type="password" id="pw" placeholder="Contraseña"></div>
+ <div class="fila"><button class="p" id="bEntrar">Entrar</button><button id="bCrear">Crear cuenta</button></div>
+</section>
+
+<main id="app" class="oculto">
+ <nav id="tabs"><button data-t="dia" class="on">Día</button><button data-t="busca">Buscar</button><button data-t="etiq">Etiquetas</button><button data-t="ajus">Telegram</button><button id="bSalir">Salir</button></nav>
+
+ <section id="t-dia">
+  <div class="fila"><button id="ant">◀</button><input type="date" id="fecha"><button id="sig">▶</button><button id="hoy">Hoy</button></div>
+  <h2 id="tit"></h2>
+  <div class="caja">
+   <textarea id="texto" placeholder="Escribe o dicta tu apunte"></textarea>
+   <div class="fila"><button id="bDictar">🎤 Dictar a texto</button><button id="bGrabar">⏺ Grabar audio</button><span id="estAudio" class="meta"></span></div>
+   <div class="fila">
+    <select id="nivel"><option value="1">Apunte</option><option value="2">Recordatorio</option><option value="3">Importante</option></select>
+    <select id="etq"></select>
+    <label>Hora <input type="time" id="hora"></label>
+   </div>
+   <div class="fila">
+    <label>Alarma <input type="datetime-local" id="alarma"></label>
+    <select id="rep"><option value="">Una vez</option><option value="diaria">Cada día</option><option value="semanal">Cada semana</option></select>
+   </div>
+   <button class="p" id="bGuardar">Guardar apunte</button>
+  </div>
+  <div id="lista"></div>
+ </section>
+
+ <section id="t-busca" class="oculto">
+  <div class="fila"><input type="search" id="q" placeholder="Palabras sueltas"><select id="qEtq"></select></div>
+  <div class="fila"><label>Desde <input type="date" id="qFecha"></label>
+   <select id="qDir"><option value="atras">Hacia atrás</option><option value="adelante">Hacia adelante</option><option value="todo">Cualquier fecha</option></select>
+   <button class="p" id="bBuscar">Buscar</button></div>
+  <div id="res"></div>
+ </section>
+
+ <section id="t-etiq" class="oculto">
+  <div class="fila"><input type="text" id="nueva" placeholder="Nueva etiqueta"><button class="p" id="bNueva">Añadir</button></div>
+  <div id="listaEtq"></div>
+ </section>
+
+ <section id="t-ajus" class="oculto">
+  <div class="caja"><p>Escribe a tu bot de Telegram y pega aquí tu número de chat. Las alarmas llegarán a ese chat.</p>
+  <div class="fila"><input type="text" id="chat" placeholder="Número de chat de Telegram"><button class="p" id="bChat">Guardar</button></div></div>
+ </section>
+</main>
+
+<script>
+const SUPABASE_URL="https://TU-PROYECTO.supabase.co", SUPABASE_KEY="TU_ANON_KEY";
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);
+let user,tags=[],audioBlob=null,rec=null,fecha=new Date().toLocaleDateString("sv");
+const msg=t=>{$("msg").textContent=t||"";if(t)setTimeout(()=>$("msg").textContent="",5000)};
+const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+async function entrar(nuevo){
+ const c={email:$("em").value.trim(),password:$("pw").value};
+ const {error}=nuevo?await db.auth.signUp(c):await db.auth.signInWithPassword(c);
+ if(error)return msg(error.message);
+ if(nuevo)msg("Cuenta creada. Si te piden confirmar el correo, hazlo y entra.");
+ await iniciar(true);
+}
+async function iniciar(registrar){
+ const {data}=await db.auth.getSession();
+ if(!data.session)return;
+ user=data.session.user;
+ $("login").classList.add("oculto");$("app").classList.remove("oculto");
+ await db.from("registro_acceso").insert({user_id:user.id,evento:registrar?"login":"sesion",agente:navigator.userAgent});
+ const {data:p}=await db.from("perfiles").select("telegram_chat_id").eq("id",user.id).maybeSingle();
+ $("chat").value=p?.telegram_chat_id||"";
+ await cargarTags();
+ if(!tags.length){await db.from("etiquetas").insert(["Médico","Cumpleaños","Recordatorio","Apuntes"].map(nombre=>({user_id:user.id,nombre})));await cargarTags()}
+ dia();
+}
+async function cargarTags(){
+ const {data}=await db.from("etiquetas").select("*").order("nombre");tags=data||[];
+ const op=tags.map(t=>`<option>${esc(t.nombre)}</option>`).join("");
+ $("etq").innerHTML=op;$("qEtq").innerHTML='<option value="">Todas las etiquetas</option>'+op;
+ $("listaEtq").innerHTML=tags.map(t=>`<div class="nota n1"><b>${esc(t.nombre)}</b><button data-del="${t.id}">Eliminar</button></div>`).join("");
+}
+function tarjeta(n){
+ const lv=["","Apunte","Recordatorio","Importante"][n.nivel];
+ return `<div class="nota n${n.nivel}"><div><div class="meta">${n.fecha}${n.hora?" · "+n.hora.slice(0,5):""} · ${lv} · ${esc(n.etiqueta)}${n.alarma_en?" · ⏰ "+new Date(n.alarma_en).toLocaleString("es-ES",{dateStyle:"short",timeStyle:"short"})+(n.repetir?" ("+n.repetir+")":""):""}</div>
+ <div>${esc(n.texto).replace(/\n/g,"<br>")}</div>${n.audio_path?`<audio controls data-p="${n.audio_path}"></audio>`:""}</div>
+ <button data-borra="${n.id}" data-a="${n.audio_path||""}" aria-label="Borrar">🗑</button></div>`;
+}
+async function pintar(el,lista){
+ el.innerHTML=lista.length?lista.map(tarjeta).join(""):"<p>No hay apuntes.</p>";
+ for(const a of el.querySelectorAll("audio[data-p]")){const {data}=await db.storage.from("audios").createSignedUrl(a.dataset.p,3600);if(data)a.src=data.signedUrl}
+}
+async function dia(){
+ $("fecha").value=fecha;
+ $("tit").textContent=new Date(fecha+"T12:00").toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+ const {data,error}=await db.from("notas").select("*").eq("fecha",fecha).order("nivel",{ascending:false}).order("hora");
+ if(error)return msg(error.message);pintar($("lista"),data);
+}
+function mover(d){const x=new Date(fecha+"T12:00");x.setDate(x.getDate()+d);fecha=x.toLocaleDateString("sv");dia()}
+async function guardar(){
+ const texto=$("texto").value.trim();if(!texto&&!audioBlob)return msg("Escribe algo o graba un audio.");
+ let audio_path=null;
+ if(audioBlob){audio_path=`${user.id}/${Date.now()}.webm`;const {error}=await db.storage.from("audios").upload(audio_path,audioBlob);if(error)return msg(error.message)}
+ const al=$("alarma").value;
+ const {error}=await db.from("notas").insert({user_id:user.id,fecha,hora:$("hora").value||null,texto:texto||"(audio)",nivel:+$("nivel").value,etiqueta:$("etq").value,
+  alarma_en:al?new Date(al).toISOString():null,repetir:$("rep").value||null,audio_path});
+ if(error)return msg(error.message);
+ $("texto").value="";$("hora").value="";$("alarma").value="";$("rep").value="";audioBlob=null;$("estAudio").textContent="";dia();
+}
+function dictar(){
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return msg("Este navegador no dicta. Usa Chrome o Safari.");
+ const r=new SR();r.lang="es-ES";r.interimResults=false;$("estAudio").textContent="Escuchando…";
+ r.onresult=e=>{$("texto").value+=($("texto").value?" ":"")+e.results[0][0].transcript};
+ r.onend=()=>$("estAudio").textContent="";r.onerror=()=>msg("No se pudo dictar.");r.start();
+}
+async function grabar(){
+ if(rec){rec.stop();return}
+ try{const s=await navigator.mediaDevices.getUserMedia({audio:true});const ch=[];rec=new MediaRecorder(s);
+  rec.ondataavailable=e=>ch.push(e.data);
+  rec.onstop=()=>{audioBlob=new Blob(ch,{type:"audio/webm"});s.getTracks().forEach(t=>t.stop());rec=null;$("bGrabar").textContent="⏺ Grabar audio";$("estAudio").textContent="Audio listo para guardar"};
+  rec.start();$("bGrabar").textContent="⏹ Parar";$("estAudio").textContent="Grabando…"}catch{msg("Sin permiso de micrófono.")}
+}
+async function buscar(){
+ let q=db.from("notas").select("*");
+ const t=$("q").value.trim(),e=$("qEtq").value,f=$("qFecha").value||fecha,d=$("qDir").value;
+ if(t)q=q.ilike("texto","%"+t+"%");if(e)q=q.eq("etiqueta",e);
+ if(d==="atras")q=q.lte("fecha",f).order("fecha",{ascending:false});
+ else if(d==="adelante")q=q.gte("fecha",f).order("fecha",{ascending:true});
+ else q=q.order("fecha",{ascending:false});
+ const {data,error}=await q.limit(100);if(error)return msg(error.message);pintar($("res"),data);
+}
+document.addEventListener("click",async e=>{
+ const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.borra){if(!confirm("¿Borrar este apunte?"))return;if(b.dataset.a)await db.storage.from("audios").remove([b.dataset.a]);await db.from("notas").delete().eq("id",b.dataset.borra);dia();if(!$("t-busca").classList.contains("oculto"))buscar()}
+ if(b.dataset.del){if(!confirm("¿Eliminar la etiqueta?"))return;await db.from("etiquetas").delete().eq("id",b.dataset.del);cargarTags()}
+ if(b.dataset.t){document.querySelectorAll("#tabs [data-t]").forEach(x=>x.classList.toggle("on",x===b));
+  ["dia","busca","etiq","ajus"].forEach(t=>$("t-"+t).classList.toggle("oculto",t!==b.dataset.t))}
+});
+$("bEntrar").onclick=()=>entrar(false);$("bCrear").onclick=()=>entrar(true);
+$("bSalir").onclick=async()=>{await db.from("registro_acceso").insert({user_id:user.id,evento:"salida",agente:navigator.userAgent});await db.auth.signOut();location.reload()};
+$("ant").onclick=()=>mover(-1);$("sig").onclick=()=>mover(1);$("hoy").onclick=()=>{fecha=new Date().toLocaleDateString("sv");dia()};
+$("fecha").onchange=e=>{fecha=e.target.value||fecha;dia()};
+$("bGuardar").onclick=guardar;$("bDictar").onclick=dictar;$("bGrabar").onclick=grabar;$("bBuscar").onclick=buscar;
+$("bNueva").onclick=async()=>{const n=$("nueva").value.trim();if(!n)return;const {error}=await db.from("etiquetas").insert({user_id:user.id,nombre:n});if(error)return msg(error.message);$("nueva").value="";cargarTags()};
+$("bChat").onclick=async()=>{const {error}=await db.from("perfiles").upsert({id:user.id,telegram_chat_id:$("chat").value.trim()});msg(error?error.message:"Guardado")};
+iniciar(false);
+</script></div></body></html>
