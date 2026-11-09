@@ -13,17 +13,23 @@ background-image:repeating-linear-gradient(transparent 0 33px,var(--linea) 33px 
 h1{font-size:1.1rem;margin:0}h2{margin:.2em 0;font-size:1.5rem;text-transform:capitalize}
 nav,.fila{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
 button,select,input,textarea{font:inherit;color:inherit;border:2px solid var(--tinta);border-radius:8px;padding:8px 12px;background:#fff}
-button{cursor:pointer;font-weight:700}button.p{background:var(--tinta);color:#fff}
-button.on{background:var(--tinta);color:#fff}
+button{cursor:pointer;font-weight:700}button.p{background:var(--tinta);color:#fff}button.on{background:var(--tinta);color:#fff}
+input[type=color]{padding:2px;width:48px;height:40px}
 textarea{width:100%;min-height:90px}input[type=search],input[type=text],input[type=email],input[type=password]{flex:1;min-width:140px}
 .nota{border-left:10px solid;border-radius:8px;padding:8px 12px;margin:10px 0;display:flex;gap:10px;justify-content:space-between}
 .n1{background:var(--n1);border-color:var(--b1)}.n2{background:var(--n2);border-color:var(--b2)}.n3{background:var(--n3);border-color:var(--b3)}
-.meta{font-size:.85rem;opacity:.8}.nota audio{width:100%;margin-top:6px}
+.meta{font-size:.85rem;opacity:.85}.nota audio{width:100%;margin-top:6px}.acc{display:flex;flex-direction:column;gap:6px}
 .caja{background:#fff;border:2px solid var(--tinta);border-radius:10px;padding:12px;margin:12px 0}
 .oculto{display:none}#msg{font-weight:700;color:var(--b3)}
+.cab{display:flex;justify-content:space-between;align-items:center;gap:6px}.cab b{text-transform:capitalize}
+.rej{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:6px;text-align:center}.rej span{font-size:.8rem;font-weight:700}
+.dc{padding:2px 0;min-height:46px;border-width:1px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.dc.sel{background:var(--tinta);color:#fff}.dc.hoy{border-width:3px}
+.dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;min-height:9px}.dots i{width:9px;height:9px;border-radius:50%;border:1px solid #fff}
+.pt{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:4px;vertical-align:middle}
+#bGrabar{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #2563eb;outline-offset:2px}
 </style></head><body><div class="hoja">
-<!-- ===== CONFIGURACIÓN: pega aquí tus datos de Supabase ===== -->
 <h1>Agenda Mama</h1><div id="msg" role="status"></div>
 
 <section id="login" class="caja">
@@ -36,21 +42,25 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
  <nav id="tabs"><button data-t="dia" class="on">Día</button><button data-t="busca">Buscar</button><button data-t="etiq">Etiquetas</button><button data-t="ajus">Telegram</button><button id="bSalir">Salir</button></nav>
 
  <section id="t-dia">
-  <div class="fila"><button id="ant">◀</button><input type="date" id="fecha"><button id="sig">▶</button><button id="hoy">Hoy</button></div>
+  <div class="caja">
+   <div class="cab"><button id="mAnt" aria-label="Mes anterior">◀</button><b id="mesTit"></b><button id="mSig" aria-label="Mes siguiente">▶</button><button id="hoy">Hoy</button></div>
+   <div class="rej" id="rej"></div>
+  </div>
   <h2 id="tit"></h2>
   <div class="caja">
    <textarea id="texto" placeholder="Escribe o dicta tu apunte"></textarea>
-   <div class="fila"><button id="bDictar">🎤 Dictar a texto</button><button id="bGrabar">⏺ Grabar audio</button><span id="estAudio" class="meta"></span></div>
+   <div class="fila"><button id="bDictar">🗣 Dictar a texto</button><button id="bGrabar">🎙 Mantén pulsado para grabar</button></div>
+   <div id="estAudio" class="meta"></div>
    <div class="fila">
     <select id="nivel"><option value="1">Apunte</option><option value="2">Recordatorio</option><option value="3">Importante</option></select>
     <select id="etq"></select>
-    <label>Hora <input type="time" id="hora"></label>
    </div>
+   <div class="fila"><label>Día <input type="date" id="fnota"></label><label>Hora <input type="time" id="hora"></label></div>
    <div class="fila">
     <label>Alarma <input type="datetime-local" id="alarma"></label>
     <select id="rep"><option value="">Una vez</option><option value="diaria">Cada día</option><option value="semanal">Cada semana</option></select>
    </div>
-   <button class="p" id="bGuardar">Guardar apunte</button>
+   <div class="fila"><button class="p" id="bGuardar">Guardar apunte</button><button id="bCancel" class="oculto">Cancelar edición</button></div>
   </div>
   <div id="lista"></div>
  </section>
@@ -64,7 +74,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
  </section>
 
  <section id="t-etiq" class="oculto">
-  <div class="fila"><input type="text" id="nueva" placeholder="Nueva etiqueta"><button class="p" id="bNueva">Añadir</button></div>
+  <div class="fila"><input type="text" id="nueva" placeholder="Nueva etiqueta"><input type="color" id="nuevaCol" value="#7c3aed" aria-label="Color"><button class="p" id="bNueva">Añadir</button></div>
   <div id="listaEtq"></div>
  </section>
 
@@ -78,9 +88,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 const SUPABASE_URL="https://rixbpgjuokevcuriefgp.supabase.co", SUPABASE_KEY="sb_publishable_x4LK1CYr7f2w5PvhSjvtvg_wmp7r1zq";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
-let user,tags=[],audioBlob=null,rec=null,fecha=new Date().toLocaleDateString("sv");
-const msg=t=>{$("msg").textContent=t||"";if(t)setTimeout(()=>$("msg").textContent="",5000)};
+const ymd=d=>d.toLocaleDateString("sv");
+let user,tags=[],cache={},audioBlob=null,rec=null,grabando=false,t0=0,editId=null,editAudio=null,fecha=ymd(new Date()),mes=new Date();
+mes.setDate(1);
+const msg=t=>{$("msg").textContent=t||"";if(t)setTimeout(()=>$("msg").textContent="",6000)};
 const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const colorDe=n=>(tags.find(t=>t.nombre===n)||{}).color||"#8aa0b8";
+const loc=iso=>{const d=new Date(iso);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
+function tab(t){document.querySelectorAll("#tabs [data-t]").forEach(x=>x.classList.toggle("on",x.dataset.t===t));["dia","busca","etiq","ajus"].forEach(x=>$("t-"+x).classList.toggle("oculto",x!==t))}
 
 async function entrar(nuevo){
  const c={email:$("em").value.trim(),password:$("pw").value};
@@ -91,49 +106,72 @@ async function entrar(nuevo){
  await iniciar(true);
 }
 async function iniciar(registrar){
- const {data}=await db.auth.getSession();
- if(!data.session)return;
- user=data.session.user;
- $("login").classList.add("oculto");$("app").classList.remove("oculto");
+ const {data}=await db.auth.getSession();if(!data.session)return;
+ user=data.session.user;$("login").classList.add("oculto");$("app").classList.remove("oculto");
  await db.from("registro_acceso").insert({user_id:user.id,evento:registrar?"login":"sesion",agente:navigator.userAgent});
- const {data:p}=await db.from("perfiles").select("telegram_chat_id").eq("id",user.id).maybeSingle();
- $("chat").value=p?.telegram_chat_id||"";
+ const {data:p}=await db.from("perfiles").select("telegram_chat_id").eq("id",user.id).maybeSingle();$("chat").value=p?.telegram_chat_id||"";
  await cargarTags();
- if(!tags.length){await db.from("etiquetas").insert(["Médico","Cumpleaños","Recordatorio","Apuntes"].map(nombre=>({user_id:user.id,nombre})));await cargarTags()}
+ if(!tags.length){await db.from("etiquetas").insert([["Médico","#16a34a"],["Cumpleaños","#db2777"],["Recordatorio","#d97706"],["Apuntes","#2563eb"]].map(([nombre,color])=>({user_id:user.id,nombre,color})));await cargarTags()}
  dia();
 }
 async function cargarTags(){
  const {data}=await db.from("etiquetas").select("*").order("nombre");tags=data||[];
  const op=tags.map(t=>`<option>${esc(t.nombre)}</option>`).join("");
- $("etq").innerHTML=op;$("qEtq").innerHTML='<option value="">Todas las etiquetas</option>'+op;
- $("listaEtq").innerHTML=tags.map(t=>`<div class="nota n1"><b>${esc(t.nombre)}</b><button data-del="${t.id}">Eliminar</button></div>`).join("");
+ const sel=$("etq").value;$("etq").innerHTML=op;if(sel)$("etq").value=sel;
+ $("qEtq").innerHTML='<option value="">Todas las etiquetas</option>'+op;
+ $("listaEtq").innerHTML=tags.map(t=>{const c=t.color||"#2563eb";return `<div class="nota n1" style="align-items:center"><span><i class="pt" style="background:${c}"></i><b>${esc(t.nombre)}</b></span><span class="fila"><input type="color" value="${c}" data-col="${t.id}" aria-label="Color de ${esc(t.nombre)}"><button data-del="${t.id}">Eliminar</button></span></div>`}).join("");
+}
+async function calendario(){
+ const y=mes.getFullYear(),m=mes.getMonth(),ult=new Date(y,m+1,0).getDate();
+ const {data}=await db.from("notas").select("fecha,etiqueta").gte("fecha",ymd(new Date(y,m,1))).lte("fecha",ymd(new Date(y,m,ult)));
+ const mp={};(data||[]).forEach(n=>{(mp[n.fecha]=mp[n.fecha]||new Set()).add(n.etiqueta)});
+ let h=["L","M","X","J","V","S","D"].map(d=>`<span>${d}</span>`).join("")+"<div></div>".repeat((new Date(y,m,1).getDay()+6)%7);
+ const hoy=ymd(new Date());
+ for(let d=1;d<=ult;d++){const f=ymd(new Date(y,m,d));
+  const pts=[...(mp[f]||[])].slice(0,4).map(e=>`<i style="background:${colorDe(e)}"></i>`).join("");
+  h+=`<button class="dc${f===fecha?" sel":""}${f===hoy?" hoy":""}" data-dia="${f}">${d}<span class="dots">${pts}</span></button>`}
+ $("mesTit").textContent=mes.toLocaleDateString("es-ES",{month:"long",year:"numeric"});$("rej").innerHTML=h;
 }
 function tarjeta(n){
  const lv=["","Apunte","Recordatorio","Importante"][n.nivel];
- return `<div class="nota n${n.nivel}"><div><div class="meta">${n.fecha}${n.hora?" · "+n.hora.slice(0,5):""} · ${lv} · ${esc(n.etiqueta)}${n.alarma_en?" · ⏰ "+new Date(n.alarma_en).toLocaleString("es-ES",{dateStyle:"short",timeStyle:"short"})+(n.repetir?" ("+n.repetir+")":""):""}</div>
+ return `<div class="nota n${n.nivel}"><div><div class="meta">${n.fecha}${n.hora?" · "+n.hora.slice(0,5):""} · ${lv} · <i class="pt" style="background:${colorDe(n.etiqueta)}"></i>${esc(n.etiqueta)}${n.alarma_en?" · ⏰ "+new Date(n.alarma_en).toLocaleString("es-ES",{dateStyle:"short",timeStyle:"short"})+(n.repetir?" ("+n.repetir+")":""):""}</div>
  <div>${esc(n.texto).replace(/\n/g,"<br>")}</div>${n.audio_path?`<audio controls data-p="${n.audio_path}"></audio>`:""}</div>
- <button data-borra="${n.id}" data-a="${n.audio_path||""}" aria-label="Borrar">🗑</button></div>`;
+ <div class="acc"><button data-edita="${n.id}" aria-label="Editar">✏️</button><button data-borra="${n.id}" data-a="${n.audio_path||""}" aria-label="Borrar">🗑</button></div></div>`;
 }
 async function pintar(el,lista){
+ lista.forEach(n=>cache[n.id]=n);
  el.innerHTML=lista.length?lista.map(tarjeta).join(""):"<p>No hay apuntes.</p>";
  for(const a of el.querySelectorAll("audio[data-p]")){const {data}=await db.storage.from("audios").createSignedUrl(a.dataset.p,3600);if(data)a.src=data.signedUrl}
 }
 async function dia(){
- $("fecha").value=fecha;
+ if(!editId)$("fnota").value=fecha;
  $("tit").textContent=new Date(fecha+"T12:00").toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+ calendario();
  const {data,error}=await db.from("notas").select("*").eq("fecha",fecha).order("nivel",{ascending:false}).order("hora");
  if(error)return msg(error.message);pintar($("lista"),data);
 }
-function mover(d){const x=new Date(fecha+"T12:00");x.setDate(x.getDate()+d);fecha=x.toLocaleDateString("sv");dia()}
+function limpiar(){
+ ["texto","hora","alarma","rep"].forEach(i=>$(i).value="");audioBlob=null;editId=null;editAudio=null;
+ $("estAudio").textContent="";$("bGuardar").textContent="Guardar apunte";$("bCancel").classList.add("oculto");
+}
+function editar(id){
+ const n=cache[id];if(!n)return;
+ editId=id;editAudio=n.audio_path;audioBlob=null;fecha=n.fecha;mes=new Date(n.fecha+"T12:00");mes.setDate(1);
+ $("texto").value=n.texto==="(audio)"?"":n.texto;$("nivel").value=n.nivel;if(n.etiqueta)$("etq").value=n.etiqueta;
+ $("fnota").value=n.fecha;$("hora").value=n.hora?n.hora.slice(0,5):"";$("alarma").value=n.alarma_en?loc(n.alarma_en):"";$("rep").value=n.repetir||"";
+ $("estAudio").textContent=n.audio_path?"Este apunte tiene audio. Graba otro para cambiarlo.":"";
+ $("bGuardar").textContent="Guardar cambios";$("bCancel").classList.remove("oculto");
+ tab("dia");dia();$("texto").scrollIntoView({behavior:"smooth",block:"center"});$("texto").focus();
+}
 async function guardar(){
- const texto=$("texto").value.trim();if(!texto&&!audioBlob)return msg("Escribe algo o graba un audio.");
- let audio_path=null;
- if(audioBlob){audio_path=`${user.id}/${Date.now()}.webm`;const {error}=await db.storage.from("audios").upload(audio_path,audioBlob);if(error)return msg(error.message)}
- const al=$("alarma").value;
- const {error}=await db.from("notas").insert({user_id:user.id,fecha,hora:$("hora").value||null,texto:texto||"(audio)",nivel:+$("nivel").value,etiqueta:$("etq").value,
-  alarma_en:al?new Date(al).toISOString():null,repetir:$("rep").value||null,audio_path});
+ const texto=$("texto").value.trim();if(!texto&&!audioBlob&&!editAudio)return msg("Escribe algo o graba un audio.");
+ let ap=editAudio;
+ if(audioBlob){ap=`${user.id}/${Date.now()}.webm`;const {error}=await db.storage.from("audios").upload(ap,audioBlob);if(error)return msg(error.message);if(editAudio)await db.storage.from("audios").remove([editAudio])}
+ const al=$("alarma").value,f=$("fnota").value||fecha;
+ const row={fecha:f,hora:$("hora").value||null,texto:texto||"(audio)",nivel:+$("nivel").value,etiqueta:$("etq").value,alarma_en:al?new Date(al).toISOString():null,repetir:$("rep").value||null,audio_path:ap,avisada:false};
+ const {error}=editId?await db.from("notas").update(row).eq("id",editId):await db.from("notas").insert({...row,user_id:user.id});
  if(error)return msg(error.message);
- $("texto").value="";$("hora").value="";$("alarma").value="";$("rep").value="";audioBlob=null;$("estAudio").textContent="";dia();
+ limpiar();fecha=f;mes=new Date(f+"T12:00");mes.setDate(1);dia();
 }
 function dictar(){
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return msg("Este navegador no dicta. Usa Chrome o Safari.");
@@ -141,13 +179,21 @@ function dictar(){
  r.onresult=e=>{$("texto").value+=($("texto").value?" ":"")+e.results[0][0].transcript};
  r.onend=()=>$("estAudio").textContent="";r.onerror=()=>msg("No se pudo dictar.");r.start();
 }
-async function grabar(){
- if(rec){rec.stop();return}
- try{const s=await navigator.mediaDevices.getUserMedia({audio:true});const ch=[];rec=new MediaRecorder(s);
-  rec.ondataavailable=e=>ch.push(e.data);
-  rec.onstop=()=>{audioBlob=new Blob(ch,{type:"audio/webm"});s.getTracks().forEach(t=>t.stop());rec=null;$("bGrabar").textContent="⏺ Grabar audio";$("estAudio").textContent="Audio listo para guardar"};
-  rec.start();$("bGrabar").textContent="⏹ Parar";$("estAudio").textContent="Grabando…"}catch{msg("Sin permiso de micrófono.")}
+async function iniciarGrab(e){
+ e.preventDefault();if(rec||grabando)return;grabando=true;
+ try{e.target.setPointerCapture(e.pointerId)}catch{}
+ try{
+  const s=await navigator.mediaDevices.getUserMedia({audio:true});
+  if(!grabando){s.getTracks().forEach(t=>t.stop());return}
+  const ch=[];rec=new MediaRecorder(s);
+  rec.ondataavailable=x=>ch.push(x.data);
+  rec.onstop=()=>{s.getTracks().forEach(t=>t.stop());rec=null;$("bGrabar").classList.remove("on");$("bGrabar").textContent="🎙 Mantén pulsado para grabar";
+   if(Date.now()-t0<700){audioBlob=null;$("estAudio").textContent="";return msg("Mantén pulsado el botón mientras hablas.")}
+   audioBlob=new Blob(ch,{type:rec?.mimeType||"audio/webm"});$("estAudio").textContent="Audio listo. Pulsa Guardar."};
+  t0=Date.now();rec.start();$("bGrabar").classList.add("on");$("bGrabar").textContent="🔴 Grabando… suelta para parar";
+ }catch{grabando=false;msg("Sin permiso de micrófono. Permítelo y vuelve a mantener pulsado.")}
 }
+function pararGrab(){grabando=false;if(rec&&rec.state==="recording")rec.stop()}
 async function buscar(){
  let q=db.from("notas").select("*");
  const t=$("q").value.trim(),e=$("qEtq").value,f=$("qFecha").value||fecha,d=$("qDir").value;
@@ -159,17 +205,24 @@ async function buscar(){
 }
 document.addEventListener("click",async e=>{
  const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.dia){fecha=b.dataset.dia;dia()}
+ if(b.dataset.edita)editar(b.dataset.edita);
  if(b.dataset.borra){if(!confirm("¿Borrar este apunte?"))return;if(b.dataset.a)await db.storage.from("audios").remove([b.dataset.a]);await db.from("notas").delete().eq("id",b.dataset.borra);dia();if(!$("t-busca").classList.contains("oculto"))buscar()}
- if(b.dataset.del){if(!confirm("¿Eliminar la etiqueta?"))return;await db.from("etiquetas").delete().eq("id",b.dataset.del);cargarTags()}
- if(b.dataset.t){document.querySelectorAll("#tabs [data-t]").forEach(x=>x.classList.toggle("on",x===b));
-  ["dia","busca","etiq","ajus"].forEach(t=>$("t-"+t).classList.toggle("oculto",t!==b.dataset.t))}
+ if(b.dataset.del){if(!confirm("¿Eliminar la etiqueta?"))return;await db.from("etiquetas").delete().eq("id",b.dataset.del);await cargarTags();dia()}
+ if(b.dataset.t)tab(b.dataset.t);
+});
+document.addEventListener("change",async e=>{
+ const id=e.target.dataset.col;if(!id)return;
+ const {error}=await db.from("etiquetas").update({color:e.target.value}).eq("id",id);
+ if(error)return msg("No se pudo guardar el color: "+error.message);await cargarTags();dia();
 });
 $("bEntrar").onclick=()=>entrar(false);$("bCrear").onclick=()=>entrar(true);
 $("bSalir").onclick=async()=>{await db.from("registro_acceso").insert({user_id:user.id,evento:"salida",agente:navigator.userAgent});await db.auth.signOut();location.reload()};
-$("ant").onclick=()=>mover(-1);$("sig").onclick=()=>mover(1);$("hoy").onclick=()=>{fecha=new Date().toLocaleDateString("sv");dia()};
-$("fecha").onchange=e=>{fecha=e.target.value||fecha;dia()};
-$("bGuardar").onclick=guardar;$("bDictar").onclick=dictar;$("bGrabar").onclick=grabar;$("bBuscar").onclick=buscar;
-$("bNueva").onclick=async()=>{const n=$("nueva").value.trim();if(!n)return;const {error}=await db.from("etiquetas").insert({user_id:user.id,nombre:n});if(error)return msg(error.message);$("nueva").value="";cargarTags()};
+$("mAnt").onclick=()=>{mes.setMonth(mes.getMonth()-1);calendario()};$("mSig").onclick=()=>{mes.setMonth(mes.getMonth()+1);calendario()};
+$("hoy").onclick=()=>{fecha=ymd(new Date());mes=new Date();mes.setDate(1);dia()};
+$("bGuardar").onclick=guardar;$("bCancel").onclick=()=>{limpiar();dia()};$("bDictar").onclick=dictar;$("bBuscar").onclick=buscar;
+const g=$("bGrabar");g.addEventListener("pointerdown",iniciarGrab);g.addEventListener("pointerup",pararGrab);g.addEventListener("pointercancel",pararGrab);g.addEventListener("contextmenu",e=>e.preventDefault());
+$("bNueva").onclick=async()=>{const n=$("nueva").value.trim();if(!n)return;const {error}=await db.from("etiquetas").insert({user_id:user.id,nombre:n,color:$("nuevaCol").value});if(error)return msg(error.message);$("nueva").value="";await cargarTags()};
 $("bChat").onclick=async()=>{const {error}=await db.from("perfiles").upsert({id:user.id,telegram_chat_id:$("chat").value.trim()});msg(error?error.message:"Guardado")};
 iniciar(false);
 </script></div></body></html>
