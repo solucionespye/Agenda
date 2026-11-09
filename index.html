@@ -52,7 +52,6 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
    <div class="fila"><button id="bDictar" class="mant">🗣 Mantén pulsado para dictar</button><button id="bGrabar" class="mant">🎙 Mantén pulsado para grabar</button></div>
    <div id="estAudio" class="meta"></div>
    <div class="fila">
-    <select id="nivel"><option value="1">Apunte</option><option value="2">Recordatorio</option><option value="3">Importante</option></select>
     <select id="etq"></select>
    </div>
    <div class="fila"><label>Día <input type="date" id="fnota"></label><label>Hora <input type="time" id="hora"></label></div>
@@ -91,12 +90,13 @@ const SUPABASE_URL="https://rixbpgjuokevcuriefgp.supabase.co", SUPABASE_KEY="sb_
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
 const ymd=d=>d.toLocaleDateString("sv");
-let user,tags=[],cache={},audioBlob=null,rec=null,grabando=false,t0=0,editId=null,editAudio=null,fecha=ymd(new Date()),mes=new Date();
+let nivelAct=1,user,tags=[],cache={},audioBlob=null,rec=null,grabando=false,t0=0,editId=null,editAudio=null,fecha=ymd(new Date()),mes=new Date();
 mes.setDate(1);
 const msg=(t,ok)=>{$("msg").style.color=ok?"#15803d":"";$("msg").textContent=t||"";if(t)setTimeout(()=>$("msg").textContent="",6000)};
 const esc=s=>(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const colorDe=n=>(tags.find(t=>t.nombre===n)||{}).color||"#8aa0b8";
 const loc=iso=>{const d=new Date(iso);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16)};
+function colEtq(){const s=$("etq"),c=colorDe(s.value);s.style.background=c;s.style.color="#fff";s.style.borderColor=c;s.style.fontWeight="700"}
 function tab(t){document.querySelectorAll("#tabs [data-t]").forEach(x=>x.classList.toggle("on",x.dataset.t===t));["dia","busca","etiq","ajus"].forEach(x=>$("t-"+x).classList.toggle("oculto",x!==t))}
 
 async function entrar(nuevo){
@@ -119,7 +119,7 @@ async function iniciar(registrar){
 async function cargarTags(){
  const {data}=await db.from("etiquetas").select("*").order("nombre");tags=data||[];
  const op=tags.map(t=>`<option>${esc(t.nombre)}</option>`).join("");
- const sel=$("etq").value;$("etq").innerHTML=op;if(sel)$("etq").value=sel;
+ const sel=$("etq").value;$("etq").innerHTML=tags.map(t=>`<option style="background:${t.color||"#2563eb"};color:#fff">${esc(t.nombre)}</option>`).join("");if(sel)$("etq").value=sel;colEtq();
  $("qEtq").innerHTML='<option value="">Todas las etiquetas</option>'+op;
  $("listaEtq").innerHTML=tags.map(t=>{const c=t.color||"#2563eb";return `<div class="nota n1 etq" style="border-color:${c}"><span><i class="pt" style="background:${c}"></i><b>${esc(t.nombre)}</b></span><input type="color" value="${c}" data-col="${t.id}" aria-label="Color de ${esc(t.nombre)}"><button data-del="${t.id}" aria-label="Eliminar ${esc(t.nombre)}">🗑</button></div>`}).join("");
 }
@@ -137,7 +137,7 @@ async function calendario(){
 const alTxt=n=>n.dias_antes?new Date(n.alarma_hasta).toLocaleTimeString("es-ES",{timeStyle:"short"})+", cada día desde "+n.dias_antes+" días antes":new Date(n.alarma_en).toLocaleString("es-ES",{dateStyle:"short",timeStyle:"short"})+(n.repetir?" ("+n.repetir+")":"");
 function tarjeta(n){
  const lv=["","Apunte","Recordatorio","Importante"][n.nivel];
- return `<div class="nota n${n.nivel}"><div><div class="meta">${n.fecha}${n.hora?" · "+n.hora.slice(0,5):""} · ${lv} · <i class="pt" style="background:${colorDe(n.etiqueta)}"></i>${esc(n.etiqueta)}${n.alarma_en?" · ⏰ "+alTxt(n):""}</div>
+ return `<div class="nota n${n.nivel}"><div><div class="meta">${n.fecha}${n.hora?" · "+n.hora.slice(0,5):""} · <i class="pt" style="background:${colorDe(n.etiqueta)}"></i>${esc(n.etiqueta)}${n.alarma_en?" · ⏰ "+alTxt(n):""}</div>
  <div>${esc(n.texto).replace(/\n/g,"<br>")}</div>${n.audio_path?`<audio controls data-p="${n.audio_path}"></audio>`:""}</div>
  <div class="acc"><button data-edita="${n.id}" aria-label="Editar">✏️</button><button data-borra="${n.id}" data-a="${n.audio_path||""}" aria-label="Borrar">🗑</button></div></div>`;
 }
@@ -154,13 +154,13 @@ async function dia(){
  if(error)return msg(error.message);pintar($("lista"),data);
 }
 function limpiar(){
- ["texto","hora","alarma","rep","alHora"].forEach(i=>$(i).value="");$("antes").value=7;modoRep();audioBlob=null;editId=null;editAudio=null;
+ ["texto","hora","alarma","rep","alHora"].forEach(i=>$(i).value="");$("antes").value=7;modoRep();nivelAct=1;audioBlob=null;editId=null;editAudio=null;
  $("estAudio").textContent="";$("bGuardar").textContent="Guardar apunte";$("bCancel").classList.add("oculto");
 }
 function editar(id){
  const n=cache[id];if(!n)return;
  editId=id;editAudio=n.audio_path;audioBlob=null;fecha=n.fecha;mes=new Date(n.fecha+"T12:00");mes.setDate(1);
- $("texto").value=n.texto==="(audio)"?"":n.texto;$("nivel").value=n.nivel;if(n.etiqueta)$("etq").value=n.etiqueta;
+ $("texto").value=n.texto==="(audio)"?"":n.texto;nivelAct=n.nivel||1;if(n.etiqueta)$("etq").value=n.etiqueta;colEtq();
  $("fnota").value=n.fecha;$("hora").value=n.hora?n.hora.slice(0,5):"";$("alarma").value=n.alarma_en&&!n.dias_antes?loc(n.alarma_en):"";$("rep").value=n.dias_antes?"antes":(n.repetir||"");$("antes").value=n.dias_antes||7;$("alHora").value=n.dias_antes&&n.alarma_hasta?loc(n.alarma_hasta).slice(11,16):"";modoRep();
  $("estAudio").textContent=n.audio_path?"Este apunte tiene audio. Graba otro para cambiarlo.":"";
  $("bGuardar").textContent="Guardar cambios";$("bCancel").classList.remove("oculto");
@@ -178,7 +178,7 @@ async function guardar(){
  }else if($("alarma").value)al=new Date($("alarma").value).toISOString();
  let ap=editAudio;
  if(audioBlob){ap=`${user.id}/${Date.now()}.webm`;const {error}=await db.storage.from("audios").upload(ap,audioBlob);if(error)return msg(error.message);if(editAudio)await db.storage.from("audios").remove([editAudio])}
- const row={fecha:f,hora:$("hora").value||null,texto:texto||"(audio)",nivel:+$("nivel").value,etiqueta:$("etq").value,alarma_en:al,repetir:repe,alarma_hasta:hasta,dias_antes:antes,audio_path:ap,avisada:false};
+ const row={fecha:f,hora:$("hora").value||null,texto:texto||"(audio)",nivel:nivelAct,etiqueta:$("etq").value,alarma_en:al,repetir:repe,alarma_hasta:hasta,dias_antes:antes,audio_path:ap,avisada:false};
  const {error}=editId?await db.from("notas").update(row).eq("id",editId):await db.from("notas").insert({...row,user_id:user.id});
  if(error)return msg(error.message);
  limpiar();fecha=f;mes=new Date(f+"T12:00");mes.setDate(1);dia();
@@ -244,6 +244,6 @@ const g=$("bGrabar");g.addEventListener("pointerdown",iniciarGrab);g.addEventLis
 $("bNueva").onclick=async()=>{const n=$("nueva").value.trim();if(!n)return;const {error}=await db.from("etiquetas").insert({user_id:user.id,nombre:n,color:$("nuevaCol").value});if(error)return msg(error.message);$("nueva").value="";await cargarTags()};
 $("bChat").onclick=async()=>{const {error}=await db.from("perfiles").upsert({id:user.id,telegram_chat_id:$("chat").value.trim()});msg(error?error.message:"Guardado")};
 const dd=$("bDictar");dd.addEventListener("pointerdown",iniciarDic);dd.addEventListener("pointerup",pararDic);dd.addEventListener("pointercancel",pararDic);dd.addEventListener("contextmenu",e=>e.preventDefault());
-$("rep").onchange=modoRep;
+$("rep").onchange=modoRep;$("etq").onchange=colEtq;
 iniciar(false);
 </script></div></body></html>
