@@ -29,8 +29,47 @@ textarea{width:100%;min-height:90px}input[type=search],input[type=text],input[ty
 .pt{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:4px;vertical-align:middle}
 .mant{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}.etq{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:8px}.etq b{overflow-wrap:anywhere}.etq input[type=color]{width:46px;height:42px}
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #2563eb;outline-offset:2px}
-</style></head><body><div class="hoja">
-<h1>Agenda Mama</h1><div id="msg" role="status"></div>
+/* ===== Diseño moderno ===== */
+:root{--ac:#6366f1;--ac2:#a855f7;--bd:#e3e6f1;--sombra:0 2px 10px rgba(30,41,90,.08)}
+body{background:#f3f4fa;font-size:17px;line-height:1.45}
+.hoja{max-width:720px;background:transparent;background-image:none;padding:14px 14px 70px}
+.hoja:before{content:none}
+.top{display:flex;align-items:center;gap:10px;margin:2px 0 8px}
+.top svg{width:38px;height:38px;flex:none;filter:drop-shadow(0 2px 4px rgba(99,102,241,.35))}
+h1{font-size:1.25rem;font-weight:700;letter-spacing:-.01em;margin:0}
+h2{font-size:1.2rem;margin:.6em 0 .2em}
+button,select,input,textarea{border:1px solid var(--bd);border-radius:10px;padding:6px 11px;font-size:.92rem;background:#fff}
+button{font-weight:700;transition:transform .08s,box-shadow .15s}
+button:active{transform:scale(.96)}
+button.p{background:linear-gradient(135deg,var(--ac),var(--ac2));border-color:transparent;color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.35)}
+button.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.mant.on{background:#dc2626;border-color:#dc2626}
+textarea{min-height:76px;border-radius:12px;font-size:1rem}
+input[type=color]{width:38px;height:34px;padding:2px}
+.caja{border:1px solid var(--bd);border-radius:16px;padding:12px;margin:10px 0;box-shadow:var(--sombra)}
+nav{background:#e8eaf6;border-radius:14px;padding:4px;gap:4px;flex-wrap:nowrap;overflow-x:auto}
+nav button{flex:1;border:0;background:transparent;padding:7px 8px;font-size:.88rem;color:#4b5280;white-space:nowrap;border-radius:10px}
+nav button.on{background:#fff;color:var(--ac);box-shadow:0 1px 4px rgba(30,41,90,.15)}
+.fila{margin:8px 0;gap:6px}
+.fila label{font-size:.82rem;color:#4b5280;display:flex;flex-direction:column;gap:2px}
+.fila .mant{flex:1 1 150px;font-size:.85rem;padding:9px 8px}
+.cab button{width:34px;height:34px;padding:0}.cab #hoy{width:auto;padding:0 12px}
+.cab b{font-size:1rem}
+.rej{gap:4px}.rej span{font-size:.72rem;color:#7a80a8}
+.dc{min-height:42px;border:1px solid #eceef6;border-radius:10px;font-size:.9rem;font-weight:700;padding:3px 0}
+.dc.sel{background:linear-gradient(135deg,var(--ac),var(--ac2));border-color:transparent;color:#fff}
+.dc.hoy{border:2px solid var(--ac)}
+.dots i{width:7px;height:7px}
+.nota{border-width:0 0 0 6px;border-style:solid;border-radius:14px;padding:9px 12px;margin:8px 0;box-shadow:var(--sombra)}
+.acc{flex-direction:row;align-items:flex-start;gap:4px}
+.acc button{width:34px;height:34px;padding:0;font-size:.9rem;border-radius:9px}
+.meta{font-size:.8rem}
+.etq input[type=color]{width:38px;height:34px}
+#msg{font-size:.9rem}
+</style><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236366f1'/%3E%3Cstop offset='1' stop-color='%23a855f7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Crect x='14' y='18' width='36' height='32' rx='6' fill='%23fff'/%3E%3Cpath d='M14 24a6 6 0 0 1 6-6h24a6 6 0 0 1 6 6v4H14z' fill='%23e0e7ff'/%3E%3Crect x='22' y='12' width='4' height='10' rx='2' fill='%23fff'/%3E%3Crect x='38' y='12' width='4' height='10' rx='2' fill='%23fff'/%3E%3Cpath d='M23 39l6 6 12-12' fill='none' stroke='%236366f1' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#6366f1">
+</head><body><div class="hoja">
+<header class="top"><svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#lg)"/><rect x="14" y="18" width="36" height="32" rx="6" fill="#fff"/><path d="M14 24a6 6 0 0 1 6-6h24a6 6 0 0 1 6 6v4H14z" fill="#e0e7ff"/><rect x="22" y="12" width="4" height="10" rx="2" fill="#fff"/><rect x="38" y="12" width="4" height="10" rx="2" fill="#fff"/><path d="M23 39l6 6 12-12" fill="none" stroke="#6366f1" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><h1>Agenda Mama</h1></header><div id="msg" role="status"></div>
 
 <section id="login" class="caja">
  <h2>Entrar</h2>
