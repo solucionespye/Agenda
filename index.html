@@ -104,6 +104,7 @@ textarea{min-height:84px;resize:vertical;line-height:1.4;font-size:1rem}
 .login{max-width:420px;margin:6vh auto 0}
 .login .fld+.fld{margin-top:10px}
 
+.olvido{display:block;margin:10px auto 0;min-height:30px;font-size:.84rem;color:var(--ac)}
 .hint{margin:-2px 0 8px;font-size:.76rem;color:var(--mut)}
 </style></head><body><div class="wrap">
 <header class="top"><svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f46e5"/><stop offset=".55" stop-color="#7c3aed"/><stop offset="1" stop-color="#c026d3"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#lg)"/><rect x="15" y="19" width="34" height="30" rx="6" fill="none" stroke="#fff" stroke-width="3.5"/><path d="M15 29h34M24 13v10M40 13v10" stroke="#fff" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M25 39l5 5 9-10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg><h1>Agenda</h1></header>
@@ -114,6 +115,14 @@ textarea{min-height:84px;resize:vertical;line-height:1.4;font-size:1rem}
  <label class="fld">Correo<input type="email" id="em" autocomplete="username"></label>
  <label class="fld">Contraseña<input type="password" id="pw" autocomplete="current-password"></label>
  <div class="acts"><button class="p big" id="bEntrar">Entrar</button><button class="big" id="bCrear">Crear cuenta</button></div>
+ <button class="g olvido" id="bOlvido" type="button">¿Olvidaste la contraseña?</button>
+</section>
+
+<section id="recu" class="caja login oculto">
+ <h2 style="margin-top:0">Nueva contraseña</h2>
+ <label class="fld">Nueva contraseña<input type="password" id="pw1" autocomplete="new-password" minlength="6"></label>
+ <label class="fld">Repite la contraseña<input type="password" id="pw2" autocomplete="new-password" minlength="6"></label>
+ <div class="acts"><button class="p big" id="bNuevaPw">Guardar contraseña</button></div>
 </section>
 
 <main id="app" class="oculto">
@@ -192,6 +201,7 @@ textarea{min-height:84px;resize:vertical;line-height:1.4;font-size:1rem}
 <script>
 const SUPABASE_URL="https://rixbpgjuokevcuriefgp.supabase.co", SUPABASE_KEY="sb_publishable_x4LK1CYr7f2w5PvhSjvtvg_wmp7r1zq";
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+let recuperando=/type=recovery/.test(location.hash);
 const $=id=>document.getElementById(id);
 const ymd=d=>d.toLocaleDateString("sv");
 let nivelAct=1,user,tags=[],cache={},nuevos=[],viejos=[],quitar=[],rec=null,grabando=false,t0=0,editId=null,fecha=ymd(new Date()),mes=new Date();
@@ -221,6 +231,7 @@ async function entrar(nuevo){
  await iniciar(true);
 }
 async function iniciar(registrar){
+ if(recuperando)return;
  const {data}=await db.auth.getSession();if(!data.session)return;
  user=data.session.user;$("login").classList.add("oculto");$("app").classList.remove("oculto");
  await db.from("registro_acceso").insert({user_id:user.id,evento:registrar?"login":"sesion",agente:navigator.userAgent});
@@ -373,5 +384,25 @@ $("bNueva").onclick=async()=>{const n=$("nueva").value.trim();if(!n)return;const
 $("bChat").onclick=async()=>{const {error}=await db.from("perfiles").upsert({id:user.id,telegram_chat_id:$("chat").value.trim()});msg(error?error.message:"Guardado",!error)};
 const dd=$("bDictar");dd.addEventListener("pointerdown",iniciarDic);dd.addEventListener("pointerup",pararDic);dd.addEventListener("pointercancel",pararDic);dd.addEventListener("contextmenu",e=>e.preventDefault());
 $("rep").onchange=modoRep;$("etq").onchange=colEtq;
+function verRecu(){$("login").classList.add("oculto");$("recu").classList.remove("oculto")}
+db.auth.onAuthStateChange(ev=>{if(ev==="PASSWORD_RECOVERY"){recuperando=true;verRecu()}});
+if(recuperando)verRecu();
+$("bOlvido").onclick=async()=>{
+ const email=$("em").value.trim();
+ if(!email)return msg("Escribe tu correo arriba y pulsa de nuevo \"¿Olvidaste la contraseña?\".");
+ const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:location.href.split("#")[0].split("?")[0]});
+ msg(error?error.message:"Si el correo existe, te hemos enviado un enlace para crear una nueva contraseña.",!error);
+};
+$("bNuevaPw").onclick=async()=>{
+ const a=$("pw1").value,b=$("pw2").value;
+ if(a.length<6)return msg("La contraseña debe tener al menos 6 caracteres.");
+ if(a!==b)return msg("Las contraseñas no coinciden.");
+ const {error}=await db.auth.updateUser({password:a});
+ if(error)return msg(error.message);
+ recuperando=false;history.replaceState(null,"",location.pathname+location.search);
+ $("recu").classList.add("oculto");msg("Contraseña actualizada.",true);
+ await iniciar(true);
+};
+$("pw2").addEventListener("keydown",e=>{if(e.key==="Enter")$("bNuevaPw").click()});
 iniciar(false);
 </script></div></body></html>
