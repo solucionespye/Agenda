@@ -13,8 +13,8 @@
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 "Inter",system-ui,-apple-system,"Segoe UI",sans-serif;letter-spacing:-.005em}
-.wrap{max-width:720px;margin:0 auto;padding:12px 14px 96px}
-.top{display:flex;align-items:center;gap:10px;padding:4px 0 6px}
+.wrap{max-width:720px;margin:0 auto;padding:12px 14px 28px}
+.top{display:flex;align-items:center;gap:10px;padding:6px 0;position:sticky;top:0;z-index:15;background:var(--bg)}
 .top svg{width:32px;height:32px;flex:none;border-radius:9px;display:block;box-shadow:0 3px 10px rgba(124,58,237,.35)}
 h1{font-size:1.3rem;margin:0;font-weight:600;letter-spacing:-.01em;background:var(--g);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
 h2{font-size:1rem;margin:16px 0 8px;font-weight:600}
@@ -90,14 +90,31 @@ textarea{min-height:84px;resize:vertical;line-height:1.4;font-size:1rem}
 .trow{position:relative;overflow:hidden;display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,color-mix(in srgb,var(--a) 20%,var(--card)),color-mix(in srgb,var(--b) 6%,var(--card)));border:1px solid color-mix(in srgb,var(--b) 26%,var(--card));border-radius:var(--r);padding:8px 8px 8px 19px;margin:8px 0;box-shadow:var(--sh)}
 .trow b{flex:1;overflow-wrap:anywhere}
 
-/* Navegación inferior */
-#tabs{position:fixed;z-index:20;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(4,1fr);background:var(--nav);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-top:1px solid var(--line);padding:0 max(0px,calc((100vw - 720px)/2)) env(safe-area-inset-bottom)}
-#tabs button{border:0;background:transparent;border-radius:0;min-height:50px;font-size:.82rem;color:var(--mut);position:relative;box-shadow:none}
-#tabs button.on{color:var(--ac)}
-#tabs button.on::before{content:"";position:absolute;top:0;left:24%;right:24%;height:3px;background:var(--g);border-radius:0 0 3px 3px}
+/* Menú lateral */
+#bMenu{flex:none;width:42px;height:42px;min-height:42px;padding:0;border-radius:12px;display:grid;place-items:center}
+#bMenu svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;display:block}
+#tabs{position:fixed;z-index:40;top:0;bottom:0;left:0;width:min(78vw,280px);display:flex;flex-direction:column;gap:4px;background:var(--card);border-right:1px solid var(--line);padding:calc(14px + env(safe-area-inset-top)) 10px 14px;transform:translateX(-102%);visibility:hidden;transition:transform .22s ease,visibility .22s}
+body.menu #tabs{transform:none;visibility:visible;box-shadow:6px 0 30px rgba(0,0,0,.25)}
+#tabs button{border:0;background:transparent;border-radius:12px;min-height:46px;font-size:1rem;color:var(--ink);text-align:left;padding:0 14px;box-shadow:none}
+#tabs button.on{background:color-mix(in srgb,var(--ac) 14%,transparent);color:var(--ac);font-weight:600}
+#velo{position:fixed;inset:0;z-index:35;background:rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .22s}
+body.menu #velo{opacity:1;pointer-events:auto}
+
+/* Vista de año */
+#anioGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media(min-width:560px){#anioGrid{grid-template-columns:repeat(3,1fr)}}
+.mes{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:8px 6px 6px;box-shadow:var(--sh)}
+.mt{display:block;width:100%;text-transform:capitalize;font-weight:600;font-size:.88rem;color:var(--ink);min-height:26px;text-align:left}
+.rej.mini{gap:1px;margin-top:4px}
+.mini .dn{font-size:.58rem}
+.yd{border:0;background:transparent;box-shadow:none;border-radius:6px;min-height:28px;padding:1px 0;font-size:.68rem;display:flex;flex-direction:column;align-items:center;gap:1px;font-weight:500}
+.yd .dots{min-height:5px;gap:1px}
+.yd .dots i{width:5px;height:5px}
+.yd.hoy{box-shadow:inset 0 0 0 1.5px var(--ac)}
+.cab #anioTit{font-variant-numeric:tabular-nums}
 
 /* Avisos */
-#msg{position:fixed;z-index:30;left:50%;transform:translateX(-50%);bottom:68px;width:max-content;max-width:min(92vw,520px);background:var(--ink);color:var(--bg);padding:9px 15px;border-radius:12px;font-size:.88rem;font-weight:500;box-shadow:0 6px 24px rgba(0,0,0,.3)}
+#msg{position:fixed;z-index:30;left:50%;transform:translateX(-50%);bottom:20px;width:max-content;max-width:min(92vw,520px);background:var(--ink);color:var(--bg);padding:9px 15px;border-radius:12px;font-size:.88rem;font-weight:500;box-shadow:0 6px 24px rgba(0,0,0,.3)}
 #msg:empty{display:none}
 #msg.ok{background:#15803d;color:#fff}
 
@@ -107,7 +124,7 @@ textarea{min-height:84px;resize:vertical;line-height:1.4;font-size:1rem}
 .olvido{display:block;margin:10px auto 0;min-height:30px;font-size:.84rem;color:var(--ac)}
 .hint{margin:-2px 0 8px;font-size:.76rem;color:var(--mut)}
 </style></head><body><div class="wrap">
-<header class="top"><svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f46e5"/><stop offset=".55" stop-color="#7c3aed"/><stop offset="1" stop-color="#c026d3"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#lg)"/><rect x="15" y="19" width="34" height="30" rx="6" fill="none" stroke="#fff" stroke-width="3.5"/><path d="M15 29h34M24 13v10M40 13v10" stroke="#fff" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M25 39l5 5 9-10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg><h1>Agenda</h1></header>
+<header class="top"><button id="bMenu" class="oculto" aria-label="Menú" aria-expanded="false" aria-controls="tabs"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button><svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4f46e5"/><stop offset=".55" stop-color="#7c3aed"/><stop offset="1" stop-color="#c026d3"/></linearGradient></defs><rect width="64" height="64" rx="15" fill="url(#lg)"/><rect x="15" y="19" width="34" height="30" rx="6" fill="none" stroke="#fff" stroke-width="3.5"/><path d="M15 29h34M24 13v10M40 13v10" stroke="#fff" stroke-width="3.5" stroke-linecap="round" fill="none"/><path d="M25 39l5 5 9-10" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg><h1>Agenda</h1></header>
 <div id="msg" role="status"></div>
 
 <section id="login" class="caja login">
@@ -126,7 +143,8 @@ textarea{min-height:84px;resize:vertical;line-height:1.4;font-size:1rem}
 </section>
 
 <main id="app" class="oculto">
- <nav id="tabs"><button data-t="dia" class="on">Día</button><button data-t="busca">Buscar</button><button data-t="etiq">Etiquetas</button><button data-t="ajus">Ajustes</button></nav>
+ <div id="velo"></div>
+ <nav id="tabs"><button data-t="dia" class="on">Día</button><button data-t="anio">Año</button><button data-t="busca">Buscar</button><button data-t="etiq">Etiquetas</button><button data-t="ajus">Ajustes</button></nav>
 
  <section id="t-dia">
   <div class="caja">
@@ -162,6 +180,18 @@ textarea{min-height:84px;resize:vertical;line-height:1.4;font-size:1rem}
    </div>
    <div class="acts"><button class="p big" id="bGuardar">Guardar apunte</button></div>
   </div>
+ </section>
+
+ <section id="t-anio" class="oculto">
+  <div class="caja">
+   <div class="cab">
+    <button id="aAnt" aria-label="Año anterior"><svg viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <b id="anioTit"></b>
+    <button id="aSig" aria-label="Año siguiente"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></button>
+    <button id="aHoy">Este año</button>
+   </div>
+  </div>
+  <div id="anioGrid"></div>
  </section>
 
  <section id="t-busca" class="oculto">
@@ -220,7 +250,7 @@ function estadoAudio(){
  const f=(t,a,i)=>`<div class="arow"><span>${t}</span><button class="g d" data-${a}="${i}" aria-label="Quitar: ${t}">Quitar</button></div>`;
  $("audiosEd").innerHTML=viejos.map((p,i)=>f("Audio guardado "+(i+1),"qv",i)).join("")+nuevos.map((b,i)=>f("Audio nuevo "+(i+1)+" · se guarda con el apunte","qn",i)).join("");
 }
-function tab(t){document.querySelectorAll("#tabs [data-t]").forEach(x=>x.classList.toggle("on",x.dataset.t===t));["dia","busca","etiq","ajus"].forEach(x=>$("t-"+x).classList.toggle("oculto",x!==t));window.scrollTo({top:0})}
+function tab(t){document.querySelectorAll("#tabs [data-t]").forEach(x=>x.classList.toggle("on",x.dataset.t===t));["dia","anio","busca","etiq","ajus"].forEach(x=>$("t-"+x).classList.toggle("oculto",x!==t));menu(false);if(t==="anio")anio();window.scrollTo({top:0})}
 
 async function entrar(nuevo){
  const c={email:$("em").value.trim(),password:$("pw").value};
@@ -233,7 +263,7 @@ async function entrar(nuevo){
 async function iniciar(registrar){
  if(recuperando)return;
  const {data}=await db.auth.getSession();if(!data.session)return;
- user=data.session.user;$("login").classList.add("oculto");$("app").classList.remove("oculto");
+ user=data.session.user;$("login").classList.add("oculto");$("app").classList.remove("oculto");$("bMenu").classList.remove("oculto");
  await db.from("registro_acceso").insert({user_id:user.id,evento:registrar?"login":"sesion",agente:navigator.userAgent});
  const {data:p}=await db.from("perfiles").select("telegram_chat_id").eq("id",user.id).maybeSingle();$("chat").value=p?.telegram_chat_id||"";
  await cargarTags();
@@ -384,6 +414,34 @@ $("bNueva").onclick=async()=>{const n=$("nueva").value.trim();if(!n)return;const
 $("bChat").onclick=async()=>{const {error}=await db.from("perfiles").upsert({id:user.id,telegram_chat_id:$("chat").value.trim()});msg(error?error.message:"Guardado",!error)};
 const dd=$("bDictar");dd.addEventListener("pointerdown",iniciarDic);dd.addEventListener("pointerup",pararDic);dd.addEventListener("pointercancel",pararDic);dd.addEventListener("contextmenu",e=>e.preventDefault());
 $("rep").onchange=modoRep;$("etq").onchange=colEtq;
+let anioV=new Date().getFullYear();
+async function anio(){
+ const y=anioV;$("anioTit").textContent=y;
+ let rows=[],from=0;
+ for(;;){const {data,error}=await db.from("notas").select("fecha,etiqueta").gte("fecha",y+"-01-01").lte("fecha",y+"-12-31").order("fecha").range(from,from+999);
+  if(error)return msg(error.message);rows=rows.concat(data||[]);if(!data||data.length<1000)break;from+=1000}
+ if(y!==anioV)return;
+ const mp={};rows.forEach(n=>{(mp[n.fecha]=mp[n.fecha]||new Set()).add(n.etiqueta)});
+ const hoy=ymd(new Date());let h="";
+ for(let m=0;m<12;m++){
+  const ult=new Date(y,m+1,0).getDate(),off=(new Date(y,m,1).getDay()+6)%7;
+  const nm=new Date(y,m,1).toLocaleDateString("es-ES",{month:"long"});
+  let c=["L","M","X","J","V","S","D"].map(d=>`<span class="dn">${d}</span>`).join("")+"<div></div>".repeat(off);
+  for(let d=1;d<=ult;d++){const f=ymd(new Date(y,m,d));
+   const pts=[...(mp[f]||[])].slice(0,3).map(e=>`<i style="${cv(colorDe(e))}"></i>`).join("");
+   c+=`<button class="yd${f===hoy?" hoy":""}" data-ydia="${f}" aria-label="${d} de ${nm}">${d}<span class="dots">${pts}</span></button>`}
+  h+=`<div class="mes"><button class="g mt" data-ymes="${m}">${nm}</button><div class="rej mini">${c}</div></div>`}
+ $("anioGrid").innerHTML=h;
+}
+$("anioGrid").addEventListener("click",e=>{
+ const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.ydia){const f=b.dataset.ydia,[yy,mm]=f.split("-");fecha=f;mes=new Date(+yy,+mm-1,1);tab("dia");dia()}
+ else if(b.dataset.ymes!==undefined){const m=+b.dataset.ymes,h=new Date();mes=new Date(anioV,m,1);fecha=(h.getFullYear()===anioV&&h.getMonth()===m)?ymd(h):ymd(mes);tab("dia");dia()}
+});
+$("aAnt").onclick=()=>{anioV--;anio()};$("aSig").onclick=()=>{anioV++;anio()};$("aHoy").onclick=()=>{anioV=new Date().getFullYear();anio()};
+const menu=o=>{document.body.classList.toggle("menu",o);$("bMenu").setAttribute("aria-expanded",o)};
+$("bMenu").onclick=()=>menu(!document.body.classList.contains("menu"));$("velo").onclick=()=>menu(false);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")menu(false)});
 function verRecu(){$("login").classList.add("oculto");$("recu").classList.remove("oculto")}
 db.auth.onAuthStateChange(ev=>{if(ev==="PASSWORD_RECOVERY"){recuperando=true;verRecu()}});
 if(recuperando)verRecu();
